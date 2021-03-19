@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:auth0_sdk/auth0_sdk.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,34 @@ class _Auth0AppState extends State<Auth0App> {
     initAuth0();
   }
 
+  Future<void> _handleSignIn() async {
+    try {
+      try {
+        LoginResult socialResult = await Auth0Sdk.loginWithGoogle();
+        final idToken = _parseAuthZeroIdToken(socialResult.idToken);
+        print("!!!!!!!! ${idToken}");
+        setState(() {
+          _token = socialResult.idToken;
+        });
+      } on PlatformException catch (e) {
+        setState(() {
+          _token = e.code;
+        });
+      }
+    } catch (error) {
+      print(error);
+    }
+  }
+
+  Map<String, dynamic> _parseAuthZeroIdToken(String idToken) {
+    final parts = idToken.split('.');
+    assert(parts.length == 3);
+
+    return jsonDecode(
+            utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))))
+        as Map<String, dynamic>;
+  }
+
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initAuth0() async {
     String initState = "Checking";
@@ -33,7 +62,7 @@ class _Auth0AppState extends State<Auth0App> {
           clientId: "UM0fB5NVy7eKQ2nmNjpvV260L6eWTX4a",
           domain: "ltdev.eu.auth0.com");
       initState = "Initialised!";
-      Future.delayed(Duration(seconds: 5), () async {
+      /*Future.delayed(Duration(seconds: 5), () async {
         try {
           LoginResult result = await Auth0Sdk.loginUsernamePassword(
               username: "yannick.vangodtsenhoven+auth@gmail.com",
@@ -46,7 +75,7 @@ class _Auth0AppState extends State<Auth0App> {
             _token = e.code;
           });
         }
-      });
+      });*/
     } on Exception {
       initState = "Error while initialising!";
     }
@@ -73,6 +102,14 @@ class _Auth0AppState extends State<Auth0App> {
             children: [
               Text('Initstate: $_initState\n'),
               Text('Token: $_token\n'),
+              SizedBox(
+                height: 100,
+              ),
+              FlatButton(
+                  onPressed: () {
+                    _handleSignIn();
+                  },
+                  child: Text("Sign in with Google"))
             ],
           ),
         ),
