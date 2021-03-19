@@ -29,14 +29,36 @@ class _Auth0AppState extends State<Auth0App> {
   }
 
   Future<void> _handleAuthWithEmailAndPassword() async {
-    try {
-      LoginResult socialResult =
-          await Auth0Sdk.loginUsernamePassword(username: _email, password: _pw);
-      _handleResult(socialResult);
-    } on PlatformException catch (e) {
-      setState(() {
-        _label = e.code;
-      });
+    if (_create) {
+      try {
+        RegisterResult registerResult =
+            await Auth0Sdk.registerWithEmailAndPassword(
+                email: _email, password: _pw);
+        if (registerResult.emailVerified) {
+          setState(() {
+            _create = false;
+          });
+          _handleAuthWithEmailAndPassword();
+        } else {
+          setState(() {
+            _label = "verify email";
+          });
+        }
+      } on PlatformException catch (e) {
+        setState(() {
+          _label = e.code;
+        });
+      }
+    } else {
+      try {
+        LoginResult socialResult = await Auth0Sdk.loginWithEmailAndPassword(
+            email: _email, password: _pw);
+        _handleResult(socialResult);
+      } on PlatformException catch (e) {
+        setState(() {
+          _label = e.code;
+        });
+      }
     }
   }
 

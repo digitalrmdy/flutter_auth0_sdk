@@ -68,12 +68,29 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           }
         } )
       }
-      "loginUsernamePassword" -> {
-        val username:String = call.argument<String>("username")!!
+      "loginWithEmailAndPassword" -> {
+        val email:String = call.argument<String>("email")!!
         val password:String = call.argument<String>("password")!!
-        sdkService.loginUsernamePassword(username, password, object: (LoginResult) -> Unit {
+        sdkService.loginWithEmailAndPassword(email, password, object: (LoginResult) -> Unit {
           override fun invoke(resultValue: LoginResult) {
             handleResult(resultValue, result)
+          }
+        })
+      }
+      "registerWithEmailAndPassword" -> {
+        val email:String = call.argument<String>("email")!!
+        val password:String = call.argument<String>("password")!!
+        sdkService.registerWithEmailAndPassword(email, password, "Username-Password-Authentication", object: (RegisterResult) -> Unit {
+          override fun invoke(resultValue: RegisterResult) {
+            if (resultValue is RegisterSuccess) {
+              val returnValue: MutableMap<String, String> = mutableMapOf()
+              returnValue["email"] = resultValue.email
+              returnValue["username"] = resultValue.username ?: ""
+              returnValue["emailVerified"] = resultValue.emailVerified.toString()
+              result.success(returnValue)
+            } else if (resultValue is RegisterError) {
+              result.error(resultValue.code.toString(), resultValue.message, null)
+            }
           }
         })
       }
@@ -117,3 +134,7 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 sealed class LoginResult
 data class LoginSuccess(val idToken: String, val accessToken: String, val refreshToken: String?) : LoginResult()
 data class LoginError(val code: Int, val message: String) : LoginResult()
+
+sealed class RegisterResult
+data class RegisterSuccess(val email: String, val username: String?, val emailVerified: Boolean) : RegisterResult()
+data class RegisterError(val code: Int, val message: String) : RegisterResult()

@@ -1,9 +1,8 @@
 package be.rmdy.auth0_sdk.auth0
 
 import android.content.Context
-import be.rmdy.auth0_sdk.LoginError
-import be.rmdy.auth0_sdk.LoginResult
-import be.rmdy.auth0_sdk.LoginSuccess
+import android.util.Log
+import be.rmdy.auth0_sdk.*
 import com.auth0.android.Auth0
 import com.auth0.android.authentication.AuthenticationAPIClient
 import com.auth0.android.authentication.AuthenticationException
@@ -11,6 +10,7 @@ import com.auth0.android.callback.Callback
 import com.auth0.android.provider.WebAuthProvider
 //import com.auth0.android.request.DefaultClient
 import com.auth0.android.result.Credentials
+import com.auth0.android.result.DatabaseUser
 
 class SDKService {
 
@@ -27,14 +27,26 @@ class SDKService {
             onResult(true)
     }
 
-    fun loginUsernamePassword(username: String, password: String, onResult: (LoginResult) -> Unit) {
-        apiClient?.login(username, password)?.start(object : Callback<Credentials, AuthenticationException> {
+    fun loginWithEmailAndPassword(email: String, password: String, onResult: (LoginResult) -> Unit) {
+        apiClient?.login(email, password)?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
                 onResult(LoginError(code = error.statusCode, message = error.message ?: "error while logging in with username/password "))
             }
 
             override fun onSuccess(result: Credentials) {
                 onResult(LoginSuccess(idToken = result.idToken, refreshToken = result.refreshToken, accessToken = result.accessToken))
+            }
+        })
+    }
+
+    fun registerWithEmailAndPassword(email: String, password: String, connection: String, onResult: (RegisterResult) -> Unit) {
+        apiClient?.createUser(email = email, password = password, connection = connection)?.start(object : Callback<DatabaseUser, AuthenticationException> {
+            override fun onFailure(error: AuthenticationException) {
+                onResult(RegisterError(code = error.statusCode, message = error.message ?: "error while registering with username/password "))
+            }
+
+            override fun onSuccess(result: DatabaseUser) {
+                onResult(RegisterSuccess(email = result.email, username = result.username, emailVerified = result.isEmailVerified))
             }
         })
     }

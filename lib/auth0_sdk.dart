@@ -21,13 +21,13 @@ class Auth0Sdk {
     }
   }
 
-  static Future<LoginResult> loginUsernamePassword(
-      {@required String username, @required String password}) async {
+  static Future<LoginResult> loginWithEmailAndPassword(
+      {@required String email, @required String password}) async {
     try {
       Map<dynamic, dynamic> result = await _channel
           .invokeMethod<Map<dynamic, dynamic>>(
-              'loginUsernamePassword', <String, dynamic>{
-        'username': username,
+              'loginWithEmailAndPassword', <String, dynamic>{
+        'email': email,
         'password': password,
       });
       return LoginResult(
@@ -36,6 +36,26 @@ class Auth0Sdk {
           refreshToken: result['refreshToken']);
     } on PlatformException catch (e) {
       developer.log('Error during login: ${e.code} - ${e.message}',
+          name: 'auth0_sdk');
+      rethrow;
+    }
+  }
+
+  static Future<RegisterResult> registerWithEmailAndPassword(
+      {@required String email, @required String password}) async {
+    try {
+      Map<dynamic, dynamic> result = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>(
+              'registerWithEmailAndPassword', <String, dynamic>{
+        'email': email,
+        'password': password,
+      });
+      return RegisterResult(
+          email: result['email'],
+          username: result['username'],
+          emailVerified: result['emailVerified'] == "true" ? true : false);
+    } on PlatformException catch (e) {
+      developer.log('Error during register: ${e.code} - ${e.message}',
           name: 'auth0_sdk');
       rethrow;
     }
@@ -74,4 +94,15 @@ class LoginResult {
       {@required this.idToken,
       @required this.accessToken,
       @required this.refreshToken});
+}
+
+class RegisterResult {
+  final String email;
+  final String username;
+  final bool emailVerified;
+
+  RegisterResult(
+      {@required this.email,
+      @required this.username,
+      @required this.emailVerified});
 }
