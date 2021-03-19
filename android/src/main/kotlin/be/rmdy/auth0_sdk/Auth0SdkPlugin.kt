@@ -73,52 +73,39 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         val password:String = call.argument<String>("password")!!
         sdkService.loginUsernamePassword(username, password, object: (LoginResult) -> Unit {
           override fun invoke(resultValue: LoginResult) {
-            if (resultValue is LoginSuccess) {
-              val returnValue: MutableMap<String, String> = mutableMapOf()
-              returnValue["idToken"] = resultValue.idToken
-              returnValue["refreshToken"] = resultValue.refreshToken ?: ""
-              returnValue["accessToken"] = resultValue.accessToken
-              result.success(returnValue)
-            } else if (resultValue is LoginError) {
-              result.error(resultValue.code.toString(), resultValue.message, null)
-            }
+            handleResult(resultValue, result)
           }
         })
       }
-      "loginWithSocial" -> {
-        val accessToken:String = call.argument<String>("accessToken")!!
-        sdkService.loginSocial(accessToken, object: (LoginResult) -> Unit {
+      "authWithGoogle" -> {
+        sdkService.authWithGoogle(activity, object: (LoginResult) -> Unit {
           override fun invoke(resultValue: LoginResult) {
-            if (resultValue is LoginSuccess) {
-              val returnValue: MutableMap<String, String> = mutableMapOf()
-              returnValue["idToken"] = resultValue.idToken
-              returnValue["refreshToken"] = resultValue.refreshToken ?: ""
-              returnValue["accessToken"] = resultValue.accessToken
-              result.success(returnValue)
-            } else if (resultValue is LoginError) {
-              result.error(resultValue.code.toString(), resultValue.message, null)
-            }
+            handleResult(resultValue, result)
           }
         })
       }
-      "loginWithGoogle" -> {
-        sdkService.loginGoogle(activity, object: (LoginResult) -> Unit {
+      "authWithApple" -> {
+        sdkService.authWithApple(activity, object: (LoginResult) -> Unit {
           override fun invoke(resultValue: LoginResult) {
-            if (resultValue is LoginSuccess) {
-              val returnValue: MutableMap<String, String> = mutableMapOf()
-              returnValue["idToken"] = resultValue.idToken
-              returnValue["refreshToken"] = resultValue.refreshToken ?: ""
-              returnValue["accessToken"] = resultValue.accessToken
-              result.success(returnValue)
-            } else if (resultValue is LoginError) {
-              result.error(resultValue.code.toString(), resultValue.message, null)
-            }
+            handleResult(resultValue, result)
           }
         })
       }
       else -> {
         result.notImplemented()
       }
+    }
+  }
+
+  private fun handleResult(resultValue: LoginResult, result: Result) {
+    if (resultValue is LoginSuccess) {
+      val returnValue: MutableMap<String, String> = mutableMapOf()
+      returnValue["idToken"] = resultValue.idToken
+      returnValue["refreshToken"] = resultValue.refreshToken ?: ""
+      returnValue["accessToken"] = resultValue.accessToken
+      result.success(returnValue)
+    } else if (resultValue is LoginError) {
+      result.error(resultValue.code.toString(), resultValue.message, null)
     }
   }
 

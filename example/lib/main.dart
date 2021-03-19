@@ -16,7 +16,11 @@ class Auth0App extends StatefulWidget {
 
 class _Auth0AppState extends State<Auth0App> {
   String _initState = 'Unknown';
-  String _token = "";
+  String _label = "";
+
+  String _email = "";
+  String _pw = "";
+  bool _create = false;
 
   @override
   void initState() {
@@ -24,23 +28,49 @@ class _Auth0AppState extends State<Auth0App> {
     initAuth0();
   }
 
-  Future<void> _handleSignIn() async {
+  Future<void> _handleAuthWithEmailAndPassword() async {
     try {
-      try {
-        LoginResult socialResult = await Auth0Sdk.loginWithGoogle();
-        final idToken = _parseAuthZeroIdToken(socialResult.idToken);
-        print("!!!!!!!! ${idToken}");
-        setState(() {
-          _token = socialResult.idToken;
-        });
-      } on PlatformException catch (e) {
-        setState(() {
-          _token = e.code;
-        });
-      }
-    } catch (error) {
-      print(error);
+      LoginResult socialResult =
+          await Auth0Sdk.loginUsernamePassword(username: _email, password: _pw);
+      _handleResult(socialResult);
+    } on PlatformException catch (e) {
+      setState(() {
+        _label = e.code;
+      });
     }
+  }
+
+  Future<void> _handleAuthWithGoogle() async {
+    try {
+      LoginResult socialResult = await Auth0Sdk.authWithGoogle();
+      _handleResult(socialResult);
+    } on PlatformException catch (e) {
+      setState(() {
+        _label = e.code;
+      });
+    }
+  }
+
+  Future<void> _handleAuthWithApple() async {
+    try {
+      LoginResult socialResult = await Auth0Sdk.authWithApple();
+      _handleResult(socialResult);
+    } on PlatformException catch (e) {
+      setState(() {
+        _label = e.code;
+      });
+    }
+  }
+
+  void _handleResult(LoginResult socialResult) {
+    final idToken = _parseAuthZeroIdToken(socialResult.idToken);
+    final completeSub = idToken['sub'] as String;
+    final platform = completeSub.substring(0, completeSub.indexOf("|"));
+    final email = idToken['email'] as String;
+    setState(() {
+      _label = "$platform - $email";
+    });
+    return;
   }
 
   Map<String, dynamic> _parseAuthZeroIdToken(String idToken) {
@@ -52,37 +82,18 @@ class _Auth0AppState extends State<Auth0App> {
         as Map<String, dynamic>;
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initAuth0() async {
     String initState = "Checking";
 
-    // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       Auth0Sdk.init(
           clientId: "UM0fB5NVy7eKQ2nmNjpvV260L6eWTX4a",
           domain: "ltdev.eu.auth0.com");
       initState = "Initialised!";
-      /*Future.delayed(Duration(seconds: 5), () async {
-        try {
-          LoginResult result = await Auth0Sdk.loginUsernamePassword(
-              username: "yannick.vangodtsenhoven+auth@gmail.com",
-              password: "Wachtwoord1,");
-          setState(() {
-            _token = result.idToken;
-          });
-        } on PlatformException catch (e) {
-          setState(() {
-            _token = e.code;
-          });
-        }
-      });*/
     } on Exception {
       initState = "Error while initialising!";
     }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
 
     setState(() {
@@ -98,19 +109,69 @@ class _Auth0AppState extends State<Auth0App> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Column(
-            children: [
-              Text('Initstate: $_initState\n'),
-              Text('Token: $_token\n'),
-              SizedBox(
-                height: 100,
-              ),
-              FlatButton(
-                  onPressed: () {
-                    _handleSignIn();
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+            child: Column(
+              children: [
+                Text('Initialised? $_initState\n'),
+                Text('Token: $_label\n'),
+                SizedBox(
+                  height: 50,
+                ),
+                TextField(
+                  decoration: InputDecoration(hintText: "Email"),
+                  onChanged: (value) {
+                    setState(() {
+                      _email = value;
+                    });
                   },
-                  child: Text("Sign in with Google"))
-            ],
+                ),
+                TextField(
+                  decoration: InputDecoration(hintText: "Password"),
+                  onChanged: (value) {
+                    setState(() {
+                      _pw = value;
+                    });
+                  },
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Checkbox(
+                        value: _create,
+                        onChanged: (value) {
+                          setState(() {
+                            _create = value;
+                          });
+                        }),
+                    TextButton(
+                      onPressed: () {
+                        _handleAuthWithEmailAndPassword();
+                      },
+                      child: Text("Auth with email/pw"),
+                    ),
+                  ],
+                ),
+                SizedBox(
+                  height: 50,
+                ),
+                TextButton(
+                  onPressed: () {
+                    _handleAuthWithGoogle();
+                  },
+                  child: Text("Auth with Google"),
+                ),
+                SizedBox(
+                  height: 50,
+                ),
+                TextButton(
+                  onPressed: () {
+                    _handleAuthWithApple();
+                  },
+                  child: Text("Auth with Apple"),
+                )
+              ],
+            ),
           ),
         ),
       ),

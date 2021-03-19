@@ -39,25 +39,21 @@ class SDKService {
         })
     }
 
-    fun loginSocial(token: String, onResult: (LoginResult) -> Unit){
-        apiClient?.loginWithNativeSocialToken(token = token, tokenType = "blabla")?.start(object : Callback<Credentials, AuthenticationException> {
-            override fun onFailure(error: AuthenticationException) {
-                onResult(LoginError(code = error.statusCode, message = error.message ?: "error while logging in with social "))
-            }
-
-            override fun onSuccess(result: Credentials) {
-                onResult(LoginSuccess(idToken = result.idToken, refreshToken = result.refreshToken, accessToken = result.accessToken))
-            }
-        });
+    fun authWithGoogle(context: Context, onResult: (LoginResult) -> Unit){
+        authWithSocialProvider(connection = "google-oauth2", context = context, onResult = onResult)
     }
 
-    fun loginGoogle(context: Context, onResult: (LoginResult) -> Unit){
+    fun authWithApple(context: Context, onResult: (LoginResult) -> Unit){
+        authWithSocialProvider(connection = "apple", context = context, onResult = onResult)
+    }
+
+    private fun authWithSocialProvider(connection: String, context: Context, onResult: (LoginResult) -> Unit){
         WebAuthProvider.login(this.account!!)
                 .withScope("openid profile email offline_access")
-                .withConnection("google-oauth2")
+                .withConnection(connection)
                 .start(context, object : Callback<Credentials, AuthenticationException> {
                     override fun onFailure(error: AuthenticationException) {
-                        onResult(LoginError(code = error.statusCode, message = error.message ?: "error while logging in with google "))
+                        onResult(LoginError(code = error.statusCode, message = error.message ?: "error while authenticating with $connection "))
                     }
 
                     override fun onSuccess(result: Credentials) {
