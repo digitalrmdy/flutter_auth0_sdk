@@ -17,10 +17,12 @@ class Auth0App extends StatefulWidget {
 class _Auth0AppState extends State<Auth0App> {
   String _initState = 'Unknown';
   String _label = "";
+  String _accessToken = "-";
 
   String _email = "";
   String _pw = "";
   bool _create = false;
+  String _refreshToken;
 
   @override
   void initState() {
@@ -42,11 +44,15 @@ class _Auth0AppState extends State<Auth0App> {
         } else {
           setState(() {
             _label = "verify email";
+            _accessToken = "-";
+            _refreshToken = null;
           });
         }
       } on PlatformException catch (e) {
         setState(() {
           _label = "${e.code} - ${e.message}";
+          _accessToken = "-";
+          _refreshToken = null;
         });
       }
     } else {
@@ -57,6 +63,8 @@ class _Auth0AppState extends State<Auth0App> {
       } on PlatformException catch (e) {
         setState(() {
           _label = "${e.code} - ${e.message}";
+          _accessToken = "-";
+          _refreshToken = null;
         });
       }
     }
@@ -69,6 +77,8 @@ class _Auth0AppState extends State<Auth0App> {
     } on PlatformException catch (e) {
       setState(() {
         _label = "${e.code} - ${e.message}";
+        _accessToken = "-";
+        _refreshToken = null;
       });
     }
   }
@@ -80,17 +90,37 @@ class _Auth0AppState extends State<Auth0App> {
     } on PlatformException catch (e) {
       setState(() {
         _label = "${e.code} - ${e.message}";
+        _accessToken = "-";
+        _refreshToken = null;
       });
     }
   }
 
-  void _handleResult(LoginResult socialResult) {
-    final idToken = _parseAuthZeroIdToken(socialResult.idToken);
+  Future<void> _handleRefreshAccessToken() async {
+    try {
+      if (_refreshToken != null) {
+        LoginResult socialResult =
+            await Auth0Sdk.refreshAccessToken(_refreshToken);
+        _handleResult(socialResult);
+      }
+    } on PlatformException catch (e) {
+      setState(() {
+        _label = "${e.code} - ${e.message}";
+        _accessToken = "-";
+        _refreshToken = null;
+      });
+    }
+  }
+
+  void _handleResult(LoginResult loginResult) {
+    final idToken = _parseAuthZeroIdToken(loginResult.idToken);
     final completeSub = idToken['sub'] as String;
     final platform = completeSub.substring(0, completeSub.indexOf("|"));
     final email = idToken['email'] as String;
     setState(() {
       _label = "$platform - $email";
+      _accessToken = loginResult.accessToken.substring(0, 20);
+      _refreshToken = loginResult.refreshToken;
     });
     return;
   }
@@ -133,10 +163,11 @@ class _Auth0AppState extends State<Auth0App> {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-            child: Column(
+            child: ListView(
               children: [
                 Text('SDK status? $_initState\n'),
                 Text('Result: $_label\n'),
+                Text('AccessToken: $_accessToken\n'),
                 SizedBox(
                   height: 50,
                 ),
@@ -159,6 +190,7 @@ class _Auth0AppState extends State<Auth0App> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Text("Create user?"),
                     Checkbox(
                         value: _create,
                         onChanged: (value) {
@@ -175,7 +207,7 @@ class _Auth0AppState extends State<Auth0App> {
                   ],
                 ),
                 SizedBox(
-                  height: 50,
+                  height: 25,
                 ),
                 TextButton(
                   onPressed: () {
@@ -184,14 +216,24 @@ class _Auth0AppState extends State<Auth0App> {
                   child: Text("Auth with Google"),
                 ),
                 SizedBox(
-                  height: 50,
+                  height: 25,
                 ),
                 TextButton(
                   onPressed: () {
                     _handleAuthWithApple();
                   },
                   child: Text("Auth with Apple"),
-                )
+                ),
+                SizedBox(
+                  height: 25,
+                ),
+                if (_refreshToken != null)
+                  TextButton(
+                    onPressed: () {
+                      _handleRefreshAccessToken();
+                    },
+                    child: Text("Refresh Access Token"),
+                  )
               ],
             ),
           ),
