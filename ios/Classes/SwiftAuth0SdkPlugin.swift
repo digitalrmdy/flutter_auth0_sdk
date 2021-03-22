@@ -23,6 +23,7 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
         case registerWithEmailAndPassword
         case authWithGoogle
         case authWithApple
+        case refreshAccessToken
     }
 
     public func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any]) -> Bool {
@@ -131,6 +132,26 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
                         }
                     }
                 break;
+             case .refreshAccessToken:
+                 let args = call.arguments as! [String: Any]
+                 let refreshToken = args["refreshToken"] as! String
+                appAuth?.renew(withRefreshToken: refreshToken)
+                   .start { response in
+                       switch response {
+                       case .success(let credentials):
+                          var responseValues = [String:String]()
+                          responseValues["idToken"] = credentials.idToken
+                          responseValues["refreshToken"] = credentials.refreshToken
+                          responseValues["accessToken"] = credentials.accessToken
+                          result(responseValues)
+                       case .failure(let error):
+                         if (error is AuthenticationError) {
+                             let err:AuthenticationError = error as! AuthenticationError
+                             result(FlutterError(code: String(err.statusCode), message: err.description, details: ""))
+                         }
+                       }
+                   }
+                 break;
         }
     }
 }

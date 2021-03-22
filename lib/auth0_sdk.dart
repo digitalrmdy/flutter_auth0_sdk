@@ -83,6 +83,22 @@ class Auth0Sdk {
       rethrow;
     }
   }
+
+  static Future<LoginResult> refreshAccessToken(String refreshToken) async {
+    try {
+      Map<dynamic, dynamic> result = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>('refreshAccessToken',
+              <String, dynamic>{'refreshToken': refreshToken});
+      return LoginResult(
+          idToken: result['idToken'],
+          accessToken: result['accessToken'],
+          refreshToken: result['refreshToken']);
+    } on PlatformException catch (e) {
+      developer.log('Error during refresh: ${e.code} - ${e.message}',
+          name: 'auth0_sdk');
+      rethrow;
+    }
+  }
 }
 
 class LoginResult {

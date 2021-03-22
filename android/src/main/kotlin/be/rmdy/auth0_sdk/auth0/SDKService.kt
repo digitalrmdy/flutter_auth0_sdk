@@ -74,4 +74,16 @@ class SDKService {
                 })
     }
 
+    fun refreshAccessToken(refreshToken: String, onResult: (LoginResult) -> Unit) {
+        apiClient?.renewAuth(refreshToken)?.start(object : Callback<Credentials, AuthenticationException> {
+            override fun onFailure(error: AuthenticationException) {
+                onResult(LoginError(code = error.statusCode, message = error.message ?: "error while refreshing accessToken"))
+            }
+
+            override fun onSuccess(result: Credentials) {
+                onResult(LoginSuccess(idToken = result.idToken, refreshToken = result.refreshToken, accessToken = result.accessToken))
+            }
+        })
+    }
+
 }

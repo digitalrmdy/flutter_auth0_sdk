@@ -108,6 +108,14 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           }
         })
       }
+      "refreshAccessToken" -> {
+        val refreshToken:String = call.argument<String>("refreshToken")!!
+        sdkService.refreshAccessToken(refreshToken, object: (LoginResult) -> Unit {
+          override fun invoke(resultValue: LoginResult) {
+            handleResult(resultValue, result)
+          }
+        })
+      }
       else -> {
         result.notImplemented()
       }
