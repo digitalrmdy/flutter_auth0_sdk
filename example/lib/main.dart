@@ -46,7 +46,7 @@ class _Auth0AppState extends State<Auth0App> {
         }
       } on PlatformException catch (e) {
         setState(() {
-          _label = e.code;
+          _label = "${e.code} - ${e.message}";
         });
       }
     } else {
@@ -56,7 +56,7 @@ class _Auth0AppState extends State<Auth0App> {
         _handleResult(socialResult);
       } on PlatformException catch (e) {
         setState(() {
-          _label = e.code;
+          _label = "${e.code} - ${e.message}";
         });
       }
     }
@@ -68,7 +68,7 @@ class _Auth0AppState extends State<Auth0App> {
       _handleResult(socialResult);
     } on PlatformException catch (e) {
       setState(() {
-        _label = e.code;
+        _label = "${e.code} - ${e.message}";
       });
     }
   }
@@ -79,7 +79,7 @@ class _Auth0AppState extends State<Auth0App> {
       _handleResult(socialResult);
     } on PlatformException catch (e) {
       setState(() {
-        _label = e.code;
+        _label = "${e.code} - ${e.message}";
       });
     }
   }
@@ -135,8 +135,8 @@ class _Auth0AppState extends State<Auth0App> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
             child: Column(
               children: [
-                Text('Initialised? $_initState\n'),
-                Text('Token: $_label\n'),
+                Text('SDK status? $_initState\n'),
+                Text('Result: $_label\n'),
                 SizedBox(
                   height: 50,
                 ),
