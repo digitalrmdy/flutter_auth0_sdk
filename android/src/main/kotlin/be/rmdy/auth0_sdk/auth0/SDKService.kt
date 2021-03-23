@@ -28,7 +28,7 @@ class SDKService {
     }
 
     fun loginWithEmailAndPassword(email: String, password: String, onResult: (LoginResult) -> Unit) {
-        apiClient?.login(email, password)?.start(object : Callback<Credentials, AuthenticationException> {
+        apiClient?.login(email, password)?.setScope("openid profile email offline_access")?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
                 onResult(LoginError(code = error.statusCode, message = error.message ?: "error while logging in with username/password "))
             }
@@ -75,6 +75,7 @@ class SDKService {
     }
 
     fun refreshAccessToken(refreshToken: String, onResult: (LoginResult) -> Unit) {
+        Log.e("!!!!!!!!!!", "refreshing with token $refreshToken");
         apiClient?.renewAuth(refreshToken)?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
                 onResult(LoginError(code = error.statusCode, message = error.message ?: "error while refreshing accessToken"))
