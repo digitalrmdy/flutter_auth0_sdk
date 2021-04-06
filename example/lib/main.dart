@@ -21,6 +21,7 @@ class _Auth0AppState extends State<Auth0App> {
 
   String _email = "";
   String _pw = "";
+  String _name = "";
   bool _create = false;
   String _refreshToken;
 
@@ -35,7 +36,7 @@ class _Auth0AppState extends State<Auth0App> {
       try {
         RegisterResult registerResult =
             await Auth0Sdk.registerWithEmailAndPassword(
-                email: _email, password: _pw);
+                email: _email, password: _pw, name: _name);
         if (registerResult.emailVerified) {
           setState(() {
             _create = false;
@@ -187,6 +188,15 @@ class _Auth0AppState extends State<Auth0App> {
                     });
                   },
                 ),
+                if (_create)
+                  TextField(
+                    decoration: InputDecoration(hintText: "Name"),
+                    onChanged: (value) {
+                      setState(() {
+                        _name = value;
+                      });
+                    },
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -196,6 +206,9 @@ class _Auth0AppState extends State<Auth0App> {
                         onChanged: (value) {
                           setState(() {
                             _create = value;
+                            if (!value) {
+                              _name = "";
+                            }
                           });
                         }),
                     TextButton(
