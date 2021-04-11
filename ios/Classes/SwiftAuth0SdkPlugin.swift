@@ -72,10 +72,16 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
                 let args = call.arguments as! [String: Any]
                 let email = args["email"] as! String
                 let password = args["password"] as! String
+                let name = args["name"] as! String
+                var attributes = [String: String]()
+                if (!name.isEmpty) {
+                    attributes =  ["name": name]
+                }
                 appAuth?.createUser(
                         email: email,
                         password: password,
-                        connection: "Username-Password-Authentication")
+                        connection: "Username-Password-Authentication",
+                        rootAttributes: attributes)
                     .start { response in
                         switch response {
                         case .success(let user):
