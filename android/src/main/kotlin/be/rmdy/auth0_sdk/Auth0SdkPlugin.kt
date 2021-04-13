@@ -80,7 +80,8 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       "registerWithEmailAndPassword" -> {
         val email:String = call.argument<String>("email")!!
         val password:String = call.argument<String>("password")!!
-        sdkService.registerWithEmailAndPassword(email, password, "Username-Password-Authentication", object: (RegisterResult) -> Unit {
+        val name:String = call.argument<String>("name")!!
+        sdkService.registerWithEmailAndPassword(email, password, name, "Username-Password-Authentication", object: (RegisterResult) -> Unit {
           override fun invoke(resultValue: RegisterResult) {
             if (resultValue is RegisterSuccess) {
               val returnValue: MutableMap<String, String> = mutableMapOf()

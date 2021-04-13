@@ -42,13 +42,16 @@ class Auth0Sdk {
   }
 
   static Future<RegisterResult> registerWithEmailAndPassword(
-      {@required String email, @required String password}) async {
+      {@required String email,
+      @required String password,
+      @required String name}) async {
     try {
       Map<dynamic, dynamic> result = await _channel
           .invokeMethod<Map<dynamic, dynamic>>(
               'registerWithEmailAndPassword', <String, dynamic>{
         'email': email,
         'password': password,
+        'name': name
       });
       return RegisterResult(
           email: result['email'],
