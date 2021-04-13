@@ -23,6 +23,7 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
         case registerWithEmailAndPassword
         case authWithGoogle
         case authWithApple
+        case resetPassword
         case refreshAccessToken
     }
 
@@ -137,6 +138,21 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
                             }
                         }
                     }
+                break;
+            case .resetPassword:
+                let args = call.arguments as! [String: Any]
+                let email = args["email"] as! String
+                appAuth?.resetPassword(email: email, connection: "Username-Password-Authentication").start{ response in
+                    switch response {
+                    case .success(_):
+                       result(true)
+                    case .failure(let error):
+                      if (error is AuthenticationError) {
+                          let err:AuthenticationError = error as! AuthenticationError
+                          result(FlutterError(code: String(err.statusCode), message: err.description, details: ""))
+                      }
+                    }
+                }
                 break;
              case .refreshAccessToken:
                  let args = call.arguments as! [String: Any]
