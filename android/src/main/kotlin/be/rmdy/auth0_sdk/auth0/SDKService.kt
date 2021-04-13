@@ -1,5 +1,6 @@
 package be.rmdy.auth0_sdk.auth0
 
+//import com.auth0.android.request.DefaultClient
 import android.content.Context
 import android.util.Log
 import be.rmdy.auth0_sdk.*
@@ -8,7 +9,6 @@ import com.auth0.android.authentication.AuthenticationAPIClient
 import com.auth0.android.authentication.AuthenticationException
 import com.auth0.android.callback.Callback
 import com.auth0.android.provider.WebAuthProvider
-//import com.auth0.android.request.DefaultClient
 import com.auth0.android.result.Credentials
 import com.auth0.android.result.DatabaseUser
 
@@ -19,7 +19,7 @@ class SDKService {
     var apiClient: AuthenticationAPIClient? = null
 
     fun initialize(clientId: String, domain: String, onResult: (Boolean) -> Unit) {
-            this.account = Auth0(clientId,  domain)
+            this.account = Auth0(clientId, domain)
             // Only enable network traffic logging on production environments!
             //this.account!!.networkingClient = DefaultClient(enableLogging = true)
             this.apiClient =  AuthenticationAPIClient(this.account!!)
@@ -30,7 +30,8 @@ class SDKService {
     fun loginWithEmailAndPassword(email: String, password: String, onResult: (LoginResult) -> Unit) {
         apiClient?.login(email, password)?.setScope("openid profile email offline_access")?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
-                onResult(LoginError(code = error.statusCode, message = error.message ?: "error while logging in with username/password "))
+                onResult(LoginError(code = error.statusCode, message = error.message
+                        ?: "error while logging in with username/password "))
             }
 
             override fun onSuccess(result: Credentials) {
@@ -39,10 +40,15 @@ class SDKService {
         })
     }
 
-    fun registerWithEmailAndPassword(email: String, password: String, connection: String, onResult: (RegisterResult) -> Unit) {
-        apiClient?.createUser(email = email, password = password, connection = connection)?.start(object : Callback<DatabaseUser, AuthenticationException> {
+    fun registerWithEmailAndPassword(email: String, password: String, name: String, connection: String, onResult: (RegisterResult) -> Unit) {
+        val metadata: MutableMap<String, String> = HashMap()
+        if (name.isNotBlank()) {
+            metadata["name"] = name
+        }
+        apiClient?.createUser(email = email, password = password, connection = connection)?.addParameters(metadata)?.start(object : Callback<DatabaseUser, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
-                onResult(RegisterError(code = error.statusCode, message = error.message ?: "error while registering with username/password "))
+                onResult(RegisterError(code = error.statusCode, message = error.message
+                        ?: "error while registering with username/password "))
             }
 
             override fun onSuccess(result: DatabaseUser) {
@@ -65,7 +71,8 @@ class SDKService {
                 .withConnection(connection)
                 .start(context, object : Callback<Credentials, AuthenticationException> {
                     override fun onFailure(error: AuthenticationException) {
-                        onResult(LoginError(code = error.statusCode, message = error.message ?: "error while authenticating with $connection "))
+                        onResult(LoginError(code = error.statusCode, message = error.message
+                                ?: "error while authenticating with $connection "))
                     }
 
                     override fun onSuccess(result: Credentials) {
@@ -90,7 +97,8 @@ class SDKService {
         Log.e("!!!!!!!!!!", "refreshing with token $refreshToken")
         apiClient?.renewAuth(refreshToken)?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
-                onResult(LoginError(code = error.statusCode, message = error.message ?: "error while refreshing accessToken"))
+                onResult(LoginError(code = error.statusCode, message = error.message
+                        ?: "error while refreshing accessToken"))
             }
 
             override fun onSuccess(result: Credentials) {

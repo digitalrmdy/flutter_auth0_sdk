@@ -21,6 +21,7 @@ class _Auth0AppState extends State<Auth0App> {
 
   String _email = "";
   String _pw = "";
+  String _name = "";
   bool _create = false;
   String _refreshToken;
 
@@ -35,7 +36,7 @@ class _Auth0AppState extends State<Auth0App> {
       try {
         RegisterResult registerResult =
             await Auth0Sdk.registerWithEmailAndPassword(
-                email: _email, password: _pw);
+                email: _email, password: _pw, name: _name);
         if (registerResult.emailVerified) {
           setState(() {
             _create = false;
@@ -70,11 +71,15 @@ class _Auth0AppState extends State<Auth0App> {
     }
   }
 
-  Future<void> _handleResetPassword() async {
+  Future<void> _handleResetPassword(BuildContext context) async {
     if (_email.isNotEmpty) {
       try {
         final bool result = await Auth0Sdk.resetPassword(email: _email);
-        setState(() => _resetPassword = result);
+        if (result) {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text("Sending reset email."),
+          ));
+        }
       } on PlatformException catch (e) {
         setState(() {
           _label = "${e.code} - ${e.message}";
@@ -173,89 +178,104 @@ class _Auth0AppState extends State<Auth0App> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
-            child: ListView(
-              children: [
-                Text('SDK status? $_initState\n'),
-                Text('Result: $_label\n'),
-                Text('AccessToken: $_accessToken\n'),
-                SizedBox(
-                  height: 50,
-                ),
-                TextField(
-                  decoration: InputDecoration(hintText: "Email"),
-                  onChanged: (value) {
-                    setState(() {
-                      _email = value;
-                    });
-                  },
-                ),
-                TextField(
-                  decoration: InputDecoration(hintText: "Password"),
-                  onChanged: (value) {
-                    setState(() {
-                      _pw = value;
-                    });
-                  },
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Create user?"),
-                    Checkbox(
-                        value: _create,
-                        onChanged: (value) {
-                          setState(() {
-                            _create = value;
-                          });
-                        }),
-                    TextButton(
-                      onPressed: () {
-                        _handleAuthWithEmailAndPassword();
+        body: Builder(builder: (context) {
+          return Center(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
+              child: ListView(
+                children: [
+                  Text('SDK status? $_initState\n'),
+                  Text('Result: $_label\n'),
+                  Text('AccessToken: $_accessToken\n'),
+                  SizedBox(
+                    height: 50,
+                  ),
+                  TextField(
+                    decoration: InputDecoration(hintText: "Email"),
+                    onChanged: (value) {
+                      setState(() {
+                        _email = value;
+                      });
+                    },
+                  ),
+                  TextField(
+                    decoration: InputDecoration(hintText: "Password"),
+                    onChanged: (value) {
+                      setState(() {
+                        _pw = value;
+                      });
+                    },
+                  ),
+                  if (_create)
+                    TextField(
+                      decoration: InputDecoration(hintText: "Name"),
+                      onChanged: (value) {
+                        setState(() {
+                          _name = value;
+                        });
                       },
-                      child: Text("Auth with email/pw"),
                     ),
-                  ],
-                ),
-                SizedBox(
-                  height: 25,
-                ),
-                TextButton(
-                  onPressed: () {
-                    _handleAuthWithGoogle();
-                  },
-                  child: Text("Auth with Google"),
-                ),
-                SizedBox(
-                  height: 25,
-                ),
-                TextButton(
-                  onPressed: () {
-                    _handleAuthWithApple();
-                  },
-                  child: Text("Auth with Apple"),
-                ),
-                SizedBox(
-                  height: 25,
-                ),
-                if (_refreshToken != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Create user?"),
+                      Checkbox(
+                          value: _create,
+                          onChanged: (value) {
+                            setState(() {
+                              _create = value;
+                              if (!value) {
+                                _name = "";
+                              }
+                            });
+                          }),
+                      TextButton(
+                        onPressed: () {
+                          _handleAuthWithEmailAndPassword();
+                        },
+                        child: Text("Auth with email/pw"),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
                   TextButton(
                     onPressed: () {
-                      _handleRefreshAccessToken();
+                      _handleAuthWithGoogle();
                     },
-                    child: Text("Refresh Access Token"),
+                    child: Text("Auth with Google"),
                   ),
-                SizedBox(height: 24),
-                TextButton(
-                  onPressed: () => _handleResetPassword(),
-                  child: Text("Reset password"),
-                ),
-              ],
+                  SizedBox(
+                    height: 25,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _handleAuthWithApple();
+                    },
+                    child: Text("Auth with Apple"),
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  if (_refreshToken != null)
+                    TextButton(
+                      onPressed: () {
+                        _handleRefreshAccessToken();
+                      },
+                      child: Text("Refresh Access Token"),
+                    ),
+                  SizedBox(height: 24),
+                  TextButton(
+                    onPressed: () => _handleResetPassword(context),
+                    child: Text("Reset password"),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }

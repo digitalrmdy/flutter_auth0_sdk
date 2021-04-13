@@ -11,6 +11,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
+private const val connection_name = "Username-Password-Authentication"
 
 /** Auth0SdkPlugin */
 class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -23,8 +24,7 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var activity: Activity
 
   private val sdkService = SDKService()
-  
-  private val connection_name = "Username-Password-Authentication"
+
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "auth0_sdk")
@@ -33,7 +33,7 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-    activity = binding.activity;
+    activity = binding.activity
   }
 
   override fun onDetachedFromActivity() {}
@@ -77,7 +77,8 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       "registerWithEmailAndPassword" -> {
         val email:String = call.argument<String>("email")!!
         val password:String = call.argument<String>("password")!!
-        sdkService.registerWithEmailAndPassword(email, password, connection_name, object: (RegisterResult) -> Unit {
+        val name:String = call.argument<String>("name")!!
+        sdkService.registerWithEmailAndPassword(email, password, name, connection_name, object: (RegisterResult) -> Unit {
           override fun invoke(resultValue: RegisterResult) {
             if (resultValue is RegisterSuccess) {
               val returnValue: MutableMap<String, String> = mutableMapOf()
