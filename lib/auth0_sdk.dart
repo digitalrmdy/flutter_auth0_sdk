@@ -87,6 +87,21 @@ class Auth0Sdk {
     }
   }
 
+  static Future<bool> resetPassword({@required String email}) async {
+    try {
+      bool result =
+          await _channel.invokeMethod<bool>("resetPassword", <String, dynamic>{
+        'email': email,
+      });
+
+      return result ?? false;
+    } on PlatformException catch (e) {
+      developer.log('Error during reset password: ${e.code} - ${e.message}',
+          name: "auth0_sdk");
+      rethrow;
+    }
+  }
+
   static Future<LoginResult> refreshAccessToken(String refreshToken) async {
     try {
       Map<dynamic, dynamic> result = await _channel
