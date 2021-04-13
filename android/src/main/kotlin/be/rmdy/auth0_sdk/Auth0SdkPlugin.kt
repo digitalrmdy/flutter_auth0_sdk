@@ -2,17 +2,12 @@ package be.rmdy.auth0_sdk
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.util.Log
 import be.rmdy.auth0_sdk.auth0.SDKService
-import com.auth0.android.provider.WebAuthProvider
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
-import io.flutter.plugin.common.PluginRegistry.NewIntentListener
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 
@@ -28,6 +23,8 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var activity: Activity
 
   private val sdkService = SDKService()
+  
+  private val connection_name = "Username-Password-Authentication"
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "auth0_sdk")
@@ -80,7 +77,7 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       "registerWithEmailAndPassword" -> {
         val email:String = call.argument<String>("email")!!
         val password:String = call.argument<String>("password")!!
-        sdkService.registerWithEmailAndPassword(email, password, "Username-Password-Authentication", object: (RegisterResult) -> Unit {
+        sdkService.registerWithEmailAndPassword(email, password, connection_name, object: (RegisterResult) -> Unit {
           override fun invoke(resultValue: RegisterResult) {
             if (resultValue is RegisterSuccess) {
               val returnValue: MutableMap<String, String> = mutableMapOf()
@@ -116,6 +113,18 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           }
         })
       }
+      "resetPassword" -> {
+        val email: String = call.argument<String>("email")!!
+        sdkService.resetPassword(email, connection_name, object: (ResetPasswordResult) -> Unit {
+          override fun invoke(resultValue: ResetPasswordResult) {
+            if(resultValue is ResetPasswordSuccess) {
+              result.success(true)
+            }else if(resultValue is ResetPasswordError) {
+              result.error(resultValue.code.toString(), resultValue.message, null)
+            }
+          }
+        })
+      }
       else -> {
         result.notImplemented()
       }
@@ -146,3 +155,7 @@ data class LoginError(val code: Int, val message: String) : LoginResult()
 sealed class RegisterResult
 data class RegisterSuccess(val email: String, val username: String?, val emailVerified: Boolean) : RegisterResult()
 data class RegisterError(val code: Int, val message: String) : RegisterResult()
+
+sealed class ResetPasswordResult
+data class ResetPasswordSuccess(val success: Boolean): ResetPasswordResult()
+data class ResetPasswordError(val code: Int, val message: String) : ResetPasswordResult()

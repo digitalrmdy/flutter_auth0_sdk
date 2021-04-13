@@ -74,8 +74,20 @@ class SDKService {
                 })
     }
 
+    fun resetPassword(email: String, connection: String, onResult: (ResetPasswordResult) -> Unit) {
+        apiClient?.resetPassword(email= email, connection = connection)?.start(object : Callback<Void?, AuthenticationException> {
+            override fun onFailure(error: AuthenticationException) {
+                onResult(ResetPasswordError(code= error.statusCode, message = error.message ?: "error while resetting password"))
+            }
+
+            override fun onSuccess(result: Void?) {
+                onResult(ResetPasswordSuccess(success = true))
+            }
+        })
+    }
+
     fun refreshAccessToken(refreshToken: String, onResult: (LoginResult) -> Unit) {
-        Log.e("!!!!!!!!!!", "refreshing with token $refreshToken");
+        Log.e("!!!!!!!!!!", "refreshing with token $refreshToken")
         apiClient?.renewAuth(refreshToken)?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
                 onResult(LoginError(code = error.statusCode, message = error.message ?: "error while refreshing accessToken"))

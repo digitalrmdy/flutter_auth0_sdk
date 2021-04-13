@@ -70,6 +70,19 @@ class _Auth0AppState extends State<Auth0App> {
     }
   }
 
+  Future<void> _handleResetPassword() async {
+    if (_email.isNotEmpty) {
+      try {
+        final bool result = await Auth0Sdk.resetPassword(email: _email);
+        setState(() => _resetPassword = result);
+      } on PlatformException catch (e) {
+        setState(() {
+          _label = "${e.code} - ${e.message}";
+        });
+      }
+    }
+  }
+
   Future<void> _handleAuthWithGoogle() async {
     try {
       LoginResult socialResult = await Auth0Sdk.authWithGoogle();
@@ -233,7 +246,12 @@ class _Auth0AppState extends State<Auth0App> {
                       _handleRefreshAccessToken();
                     },
                     child: Text("Refresh Access Token"),
-                  )
+                  ),
+                SizedBox(height: 24),
+                TextButton(
+                  onPressed: () => _handleResetPassword(),
+                  child: Text("Reset password"),
+                ),
               ],
             ),
           ),
