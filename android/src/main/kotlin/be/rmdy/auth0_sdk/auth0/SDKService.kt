@@ -17,9 +17,11 @@ class SDKService {
     var initialized = false
     var account:Auth0? = null
     var apiClient: AuthenticationAPIClient? = null
+    var scheme:String? = null
 
-    fun initialize(clientId: String, domain: String, onResult: (Boolean) -> Unit) {
+    fun initialize(clientId: String, domain: String, scheme: String, onResult: (Boolean) -> Unit) {
             this.account = Auth0(clientId, domain)
+            this.scheme = scheme;
             // Only enable network traffic logging on production environments!
             //this.account!!.networkingClient = DefaultClient(enableLogging = true)
             this.apiClient =  AuthenticationAPIClient(this.account!!)
@@ -67,6 +69,7 @@ class SDKService {
 
     private fun authWithSocialProvider(connection: String, context: Context, onResult: (LoginResult) -> Unit){
         WebAuthProvider.login(this.account!!)
+                .withScheme(this.scheme!!)
                 .withScope("openid profile email offline_access")
                 .withConnection(connection)
                 .start(context, object : Callback<Credentials, AuthenticationException> {
@@ -82,9 +85,9 @@ class SDKService {
     }
 
     fun resetPassword(email: String, connection: String, onResult: (ResetPasswordResult) -> Unit) {
-        apiClient?.resetPassword(email= email, connection = connection)?.start(object : Callback<Void?, AuthenticationException> {
+        apiClient?.resetPassword(email = email, connection = connection)?.start(object : Callback<Void?, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
-                onResult(ResetPasswordError(code= error.statusCode, message = error.message ?: "error while resetting password"))
+                onResult(ResetPasswordError(code = error.statusCode, message = error.message ?: "error while resetting password"))
             }
 
             override fun onSuccess(result: Void?) {
@@ -94,7 +97,6 @@ class SDKService {
     }
 
     fun refreshAccessToken(refreshToken: String, onResult: (LoginResult) -> Unit) {
-        Log.e("!!!!!!!!!!", "refreshing with token $refreshToken")
         apiClient?.renewAuth(refreshToken)?.start(object : Callback<Credentials, AuthenticationException> {
             override fun onFailure(error: AuthenticationException) {
                 onResult(LoginError(code = error.statusCode, message = error.message

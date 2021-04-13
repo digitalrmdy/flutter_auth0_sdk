@@ -55,7 +55,8 @@ class Auth0SdkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       "init" -> {
         val clientId:String = call.argument<String>("clientId")!!
         val domain:String = call.argument<String>("domain")!!
-        sdkService.initialize(clientId, domain, object: (Boolean) -> Unit {
+        val scheme:String = call.argument<String>("scheme")!!
+        sdkService.initialize(clientId, domain, scheme, object: (Boolean) -> Unit {
           override fun invoke(success: Boolean) {
             if (success) {
               result.success(null)
