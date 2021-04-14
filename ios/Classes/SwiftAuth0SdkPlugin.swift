@@ -15,6 +15,8 @@ public class SwiftAuth0SdkPlugin: NSObject {
     }
 }
 
+private let connection_name = "Username-Password-Authentication"
+
 extension SwiftAuth0SdkPlugin: FlutterPlugin {
     
     private enum MethodChannel: String {
@@ -51,7 +53,7 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
             appAuth?.login(
                 usernameOrEmail: email,
                 password: password,
-                realm: "Username-Password-Authentication",
+                realm: connection_name,
                 scope: "openid profile email offline_access")
                 .start { response in
                     switch response {
@@ -81,7 +83,7 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
             appAuth?.createUser(
                 email: email,
                 password: password,
-                connection: "Username-Password-Authentication",
+                connection: connection_name,
                 rootAttributes: attributes)
                 .start { response in
                     switch response {
@@ -142,17 +144,20 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
         case .resetPassword:
             let args = call.arguments as! [String: Any]
             let email = args["email"] as! String
-            appAuth?.resetPassword(email: email, connection: "Username-Password-Authentication").start{ response in
-                switch response {
-                case .success(_):
-                    result(true)
-                case .failure(let error):
-                    if (error is AuthenticationError) {
-                        let err:AuthenticationError = error as! AuthenticationError
-                        result(FlutterError(code: String(err.statusCode), message: err.description, details: ""))
+            appAuth?.resetPassword(
+                email: email,
+                connection: connection_name)
+                .start{ response in
+                    switch response {
+                    case .success(_):
+                        result(true)
+                    case .failure(let error):
+                        if (error is AuthenticationError) {
+                            let err:AuthenticationError = error as! AuthenticationError
+                            result(FlutterError(code: String(err.statusCode), message: err.description, details: ""))
+                        }
                     }
                 }
-            }
             break;
         case .refreshAccessToken:
             let args = call.arguments as! [String: Any]
