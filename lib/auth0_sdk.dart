@@ -8,11 +8,12 @@ class Auth0Sdk {
   static const MethodChannel _channel = const MethodChannel('auth0_sdk');
 
   static Future<void> init(
-      {@required String clientId, @required String domain}) async {
+      {@required String clientId, @required String domain, @required String scheme}) async {
     try {
       await _channel.invokeMethod<bool>('init', <String, dynamic>{
         'clientId': clientId,
         'domain': domain,
+        'scheme': scheme,
       });
     } on PlatformException catch (e) {
       developer.log('Error during init: ${e.code} - ${e.message}',

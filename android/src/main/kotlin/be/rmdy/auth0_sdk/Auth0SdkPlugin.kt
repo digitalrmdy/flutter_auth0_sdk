@@ -25,7 +25,6 @@ class Auth0SdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private val sdkService = SDKService()
 
-
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "auth0_sdk")
         channel.setMethodCallHandler(this)
@@ -52,80 +51,81 @@ class Auth0SdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
     private fun executeChannels(call: MethodCall, result: Result) {
         when (call.method) {
-          "init" -> {
-            val clientId: String = call.argument<String>("clientId")!!
-            val domain: String = call.argument<String>("domain")!!
-            sdkService.initialize(clientId, domain, object : (Boolean) -> Unit {
-              override fun invoke(success: Boolean) {
-                if (success) {
-                  result.success(null)
-                } else {
-                  result.error("", "Could not init sdk", null)
-                }
-              }
-            })
-          }
-          "loginWithEmailAndPassword" -> {
-            val email: String = call.argument<String>("email")!!
-            val password: String = call.argument<String>("password")!!
-            sdkService.loginWithEmailAndPassword(email, password, object : (LoginResult) -> Unit {
-              override fun invoke(resultValue: LoginResult) {
-                handleResult(resultValue, result)
-              }
-            })
-          }
-          "registerWithEmailAndPassword" -> {
-            val email: String = call.argument<String>("email")!!
-            val password: String = call.argument<String>("password")!!
-            val name: String = call.argument<String>("name")!!
-            sdkService.registerWithEmailAndPassword(email, password, name, connection_name, object : (RegisterResult) -> Unit {
-              override fun invoke(resultValue: RegisterResult) {
-                if (resultValue is RegisterSuccess) {
-                  val returnValue: MutableMap<String, String> = mutableMapOf()
-                  returnValue["email"] = resultValue.email
-                  returnValue["username"] = resultValue.username ?: ""
-                  returnValue["emailVerified"] = resultValue.emailVerified.toString()
-                  result.success(returnValue)
-                } else if (resultValue is RegisterError) {
-                  result.error(resultValue.code.toString(), resultValue.message, null)
-                }
-              }
-            })
-          }
-          "authWithGoogle" -> {
-            sdkService.authWithGoogle(activity, object : (LoginResult) -> Unit {
-              override fun invoke(resultValue: LoginResult) {
-                handleResult(resultValue, result)
-              }
-            })
-          }
-          "authWithApple" -> {
-            sdkService.authWithApple(activity, object : (LoginResult) -> Unit {
-              override fun invoke(resultValue: LoginResult) {
-                handleResult(resultValue, result)
-              }
-            })
-          }
-          "refreshAccessToken" -> {
-            val refreshToken: String = call.argument<String>("refreshToken")!!
-            sdkService.refreshAccessToken(refreshToken, object : (LoginResult) -> Unit {
-              override fun invoke(resultValue: LoginResult) {
-                handleResult(resultValue, result)
-              }
-            })
-          }
-          "resetPassword" -> {
-            val email: String = call.argument<String>("email")!!
-            sdkService.resetPassword(email, connection_name, object : (ResetPasswordResult) -> Unit {
-              override fun invoke(resultValue: ResetPasswordResult) {
-                if (resultValue is ResetPasswordSuccess) {
-                  result.success(true)
-                } else if (resultValue is ResetPasswordError) {
-                  result.error(resultValue.code.toString(), resultValue.message, null)
-                }
-              }
-            })
-          }
+            "init" -> {
+                val clientId: String = call.argument<String>("clientId")!!
+                val domain: String = call.argument<String>("domain")!!
+                val scheme: String = call.argument<String>("scheme")!!
+                sdkService.initialize(clientId, domain, scheme, object : (Boolean) -> Unit {
+                    override fun invoke(success: Boolean) {
+                        if (success) {
+                            result.success(null)
+                        } else {
+                            result.error("", "Could not init sdk", null)
+                        }
+                    }
+                })
+            }
+            "loginWithEmailAndPassword" -> {
+                val email: String = call.argument<String>("email")!!
+                val password: String = call.argument<String>("password")!!
+                sdkService.loginWithEmailAndPassword(email, password, object : (LoginResult) -> Unit {
+                    override fun invoke(resultValue: LoginResult) {
+                        handleResult(resultValue, result)
+                    }
+                })
+            }
+            "registerWithEmailAndPassword" -> {
+                val email: String = call.argument<String>("email")!!
+                val password: String = call.argument<String>("password")!!
+                val name: String = call.argument<String>("name")!!
+                sdkService.registerWithEmailAndPassword(email, password, name, connection_name, object : (RegisterResult) -> Unit {
+                    override fun invoke(resultValue: RegisterResult) {
+                        if (resultValue is RegisterSuccess) {
+                            val returnValue: MutableMap<String, String> = mutableMapOf()
+                            returnValue["email"] = resultValue.email
+                            returnValue["username"] = resultValue.username ?: ""
+                            returnValue["emailVerified"] = resultValue.emailVerified.toString()
+                            result.success(returnValue)
+                        } else if (resultValue is RegisterError) {
+                            result.error(resultValue.code.toString(), resultValue.message, null)
+                        }
+                    }
+                })
+            }
+            "authWithGoogle" -> {
+                sdkService.authWithGoogle(activity, object : (LoginResult) -> Unit {
+                    override fun invoke(resultValue: LoginResult) {
+                        handleResult(resultValue, result)
+                    }
+                })
+            }
+            "authWithApple" -> {
+                sdkService.authWithApple(activity, object : (LoginResult) -> Unit {
+                    override fun invoke(resultValue: LoginResult) {
+                        handleResult(resultValue, result)
+                    }
+                })
+            }
+            "refreshAccessToken" -> {
+                val refreshToken: String = call.argument<String>("refreshToken")!!
+                sdkService.refreshAccessToken(refreshToken, object : (LoginResult) -> Unit {
+                    override fun invoke(resultValue: LoginResult) {
+                        handleResult(resultValue, result)
+                    }
+                })
+            }
+            "resetPassword" -> {
+                val email: String = call.argument<String>("email")!!
+                sdkService.resetPassword(email, connection_name, object : (ResetPasswordResult) -> Unit {
+                    override fun invoke(resultValue: ResetPasswordResult) {
+                        if (resultValue is ResetPasswordSuccess) {
+                            result.success(true)
+                        } else if (resultValue is ResetPasswordError) {
+                            result.error(resultValue.code.toString(), resultValue.message, null)
+                        }
+                    }
+                })
+            }
             else -> {
                 result.notImplemented()
             }

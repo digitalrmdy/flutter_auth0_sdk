@@ -158,7 +158,8 @@ class _Auth0AppState extends State<Auth0App> {
     try {
       Auth0Sdk.init(
           clientId: "UM0fB5NVy7eKQ2nmNjpvV260L6eWTX4a",
-          domain: "ltdev.eu.auth0.com");
+          domain: "ltdev.eu.auth0.com",
+          scheme: "be.rmdy.auth0sdk");
       initState = "Initialised!";
     } on Exception {
       initState = "Error while initialising!";
