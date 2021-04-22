@@ -69,10 +69,12 @@ class SDKService {
     }
 
     private fun authWithSocialProvider(connection: String, context: Context, onResult: (LoginResult) -> Unit) {
+        val parameters = mapOf("prompt" to "login")
         WebAuthProvider.login(this.account!!)
                 .withScheme(this.scheme!!)
                 .withScope("openid profile email offline_access")
                 .withConnection(connection)
+                .withParameters(parameters)
                 .start(context, object : Callback<Credentials, AuthenticationException> {
                     override fun onFailure(error: AuthenticationException) {
                         onResult(LoginError(code = error.statusCode, message = error.message
