@@ -102,8 +102,11 @@ extension SwiftAuth0SdkPlugin: FlutterPlugin {
                 }
             break;
         case .authWithGoogle:
+            var parameters = [String: String]()
+            parameters =  ["prompt": "login"]
             webAuth?.connection("google-oauth2")
                 .scope("openid profile email offline_access")
+                .parameters(parameters)
                 .useEphemeralSession()
                 .start { response in
                     switch response {
